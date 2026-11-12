@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sorteio de Cursos - SABIO</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
+    .etapa {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    .etapa p {
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+
+    .botoes {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #0f3460;
+      color: #fff;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:hover {
+      background: #e94560;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #curso-nome {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #e94560;
+      min-height: 1.5em;
+    }
+
+    #curso-link {
+      display: inline-block;
+      margin: 1rem 0;
+      padding: 0.75rem 1.5rem;
+      background: #0f3460;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    #curso-link:hover {
+      background: #e94560;
+    }
+
+    .oculto {
+      display: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .badge-gratis {
+      background: #22c55e;
+      color: #fff;
+    }
+
+    .badge-pago {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .categoria {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.75rem;
+      background: #0f3460;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      color: #93c5fd;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #fff;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>🎲 Sorteio de Cursos</h1>
+
+    <!-- Etapa 1: Perguntar o tipo -->
+    <section id="etapa-tipo" class="etapa">
+      <p>Quer um curso <strong>pago</strong> ou <strong>gratuito</strong>?</p>
+      <div class="botoes">
+        <button id="btn-gratis">Gratuito</button>
+        <button id="btn-pago">Pago</button>
+      </div>
+    </section>
+
+    <!-- Etapa 2: Resultado -->
+    <section id="etapa-resultado" class="etapa oculto">
+      <span id="badge-tipo" class="badge"></span>
+      <p id="curso-nome"></p>
+      <span id="curso-categoria" class="categoria oculto"></span>
+      <br />
+      <a id="curso-link" href="#" target="_blank" rel="noopener" class="oculto">
+        🚀 Acessar curso
+      </a>
+      <br />
+      <button id="btn-novo">Sortear novamente</button>
+    </section>
+  </main>
+
+  <script>
+    // ============================================
+    // DADOS DOS CURSOS (16 cursos: 8 grátis + 8 pagos)
+    // ============================================
+    const cursos = [
+      // --- CURSOS GRATUITOS ---
+      {
+        nome: "CS50: Introdução à Ciência da Computação (Harvard)",
+        link: "https://cs50.harvard.edu/x/2024/",
+        tipo: "gratis",
+        categoria: "Programação",
+        descricao: "O famoso curso introdutório de Harvard sobre ciência da computação e programação."
+      },
+      {
+        nome: "freeCodeCamp: Responsive Web Design",
+        link: "https://www.freecodecamp.org/learn/2022/responsive-web-design/",
+        tipo: "gratis",
+        categoria: "Frontend",
+        descricao: "Certificação completa de HTML5 e CSS3 com projetos práticos."
+      },
+      {
+        nome: "JavaScript Algorithms and Data Structures (freeCodeCamp)",
+        link: "https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/",
+        tipo: "gratis",
+        categoria: "JavaScript",
+        descricao: "Aprenda JavaScript moderno, ES6+, algoritmos e estruturas de dados."
+      },
+      {
+        nome: "Python para Todos (Universidade de Michigan)",
+        link: "https://www.py4e.com/",
+        tipo: "gratis",
+        categoria: "Python",
+        descricao: "Curso gratuito do Dr. Charles Severance para aprender Python do zero."
+      },
+      {
+        nome: "Git e GitHub para Iniciantes (DIO)",
+        link: "https://web.dio.me/track/git-github",
+        tipo: "gratis",
+        categoria: "Ferramentas",
+        descricao: "Domine versionamento de código com Git e GitHub na prática."
+      },
+      {
+        nome: "React Official Tutorial",
+        link: "https://react.dev/learn",
+        tipo: "gratis",
+        categoria: "React",
+        descricao: "Documentação oficial interativa do React com exemplos práticos."
+      },
+      {
+        nome: "TypeScript Handbook",
+        link: "https://www.typescriptlang.org/docs/",
+        tipo: "gratis",
+        categoria: "TypeScript",
+        descricao: "Guia oficial completo do TypeScript, do básico ao avançado."
+      },
+      {
+        nome: "SQL Bolt - Interactive SQL Tutorial",
+        link: "https://sqlbolt.com/",
+        tipo: "gratis",
+        categoria: "Banco de Dados",
+        descricao: "Aprenda SQL com lições interativas no navegador."
+      },
+
+      // --- CURSOS PAGOS ---
+      {
+        nome: "Complete Web Developer Bootcamp (Angela Yu - Udemy)",
+        link: "https://www.udemy.com/course/the-complete-web-development-bootcamp/",
+        tipo: "pago",
+        categoria: "Full Stack",
+        descricao: "O curso mais completo de desenvolvimento web - HTML, CSS, JS, Node, React, MongoDB."
+      },
+      {
+        nome: "React - The Complete Guide (Maximilian Schwarzmüller - Udemy)",
+        link: "https://www.udemy.com/course/react-the-complete-guide-incl-redux/",
+        tipo: "pago",
+        categoria: "React",
+        descricao: "Domine React, Redux, Next.js, TypeScript e Testing."
+      },
+      {
+        nome: "Node.js, Express, MongoDB & More (Jonas Schmedtmann - Udemy)",
+        link: "https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/",
+        tipo: "pago",
+        categoria: "Backend",
+        descricao: "Crie APIs RESTful completas com Node.js, Express e MongoDB."
+      },
+      {
+        nome: "TypeScript: The Complete Developer's Guide (Stephen Grider - Udemy)",
+        link: "https://www.udemy.com/course/typescript-the-complete-developers-guide/",
+        tipo: "pago",
+        categoria: "TypeScript",
+        descricao: "Padrões avançados de TypeScript para aplicações reais."
+      },
+      {
+        nome: "AWS Certified Solutions Architect (Stephane Maarek - Udemy)",
+        link: "https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/",
+        tipo: "pago",
+        categoria: "Cloud",
+        descricao: "Prepare-se para a certificação AWS SAA-C03 com laboratórios práticos."
+      },
+      {
+        nome: "Docker e Kubernetes: The Complete Guide (Stephen Grider - Udemy)",
+        link: "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/",
+        tipo: "pago",
+        categoria: "DevOps",
+        descricao: "Containerize aplicações e orquestre com Kubernetes na prática."
+      },
+      {
+        nome: "Design Patterns em JavaScript/TypeScript (Refactoring.Guru)",
+        link: "https://refactoring.guru/design-patterns/typescript",
+        tipo: "pago",
+        categoria: "Arquitetura",
+        descricao: "Aprenda todos os 23 padrões GoF com exemplos em TypeScript."
+      },
+      {
+        nome: "Sistema Design Interview (Alex Xu - ByteByteGo)",
+        link: "https://bytebytego.com/",
+        tipo: "pago",
+        categoria: "Arquitetura",
+        descricao: "Prepare-se para entrevistas de system design das Big Techs."
+      }
+    ];
+
+    // ============================================
+    // LÓGICA DA APLICAÇÃO
+    // ============================================
+    const etapaTipo = document.getElementById("etapa-tipo");
+    const etapaResultado = document.getElementById("etapa-resultado");
+    const btnGratis = document.getElementById("btn-gratis");
+    const btnPago = document.getElementById("btn-pago");
+    const btnNovo = document.getElementById("btn-novo");
+    const cursoNome = document.getElementById("curso-nome");
+    const cursoLink = document.getElementById("curso-link");
+    const badgeTipo = document.getElementById("badge-tipo");
+    const cursoCategoria = document.getElementById("curso-categoria");
+
+    function getCursosFiltrados(tipo) {
+      return cursos.filter((c) => c.tipo === tipo);
+    }
+
+    function sortearCurso(tipo) {
+      const filtrados = getCursosFiltrados(tipo);
+
+      if (filtrados.length === 0) {
+        alert("Nenhum curso cadastrado nesse tipo.");
+        return;
+      }
+
+      // Animação de "sorteio"
+      btnGratis.disabled = true;
+      btnPago.disabled = true;
+      btnGratis.innerHTML = '<span class="loading"></span> Sorteando...';
+      btnPago.innerHTML = '<span class="loading"></span> Sorteando...';
+
+      let shuffles = 0;
+      const shuffleInterval = setInterval(() => {
+        const tempCourse = filtrados[Math.floor(Math.random() * filtrados.length)];
+        cursoNome.textContent = tempCourse.nome;
+        badgeTipo.textContent = tempCourse.tipo === 'gratis' ? '🆓 GRATUITO' : '💰 PAGO';
+        badgeTipo.className = 'badge ' + (tempCourse.tipo === 'gratis' ? 'badge-gratis' : 'badge-pago');
+        if (tempCourse.categoria) {
+          cursoCategoria.textContent = tempCourse.categoria;
+          cursoCategoria.classList.remove('oculto');
+        }
+        shuffles++;
+        if (shuffles >= 15) {
+          clearInterval(shuffleInterval);
+          const escolhido = filtrados[Math.floor(Math.random() * filtrados.length)];
+          mostrarResultado(escolhido);
+        }
+      }, 80);
+    }
+
+    function mostrarResultado(curso) {
+      cursoNome.textContent = curso.nome;
+      badgeTipo.textContent = curso.tipo === 'gratis' ? '🆓 GRATUITO' : '💰 PAGO';
+      badgeTipo.className = 'badge ' + (curso.tipo === 'gratis' ? 'badge-gratis' : 'badge-pago');
+
+      if (curso.categoria) {
+        cursoCategoria.textContent = curso.categoria;
+        cursoCategoria.classList.remove('oculto');
+      } else {
+        cursoCategoria.classList.add('oculto');
+      }
+
+      cursoLink.href = curso.link;
+      cursoLink.classList.remove('oculto');
+
+      etapaTipo.classList.add("oculto");
+      etapaResultado.classList.remove("oculto");
+
+      btnGratis.disabled = false;
+      btnPago.disabled = false;
+      btnGratis.textContent = "Gratuito";
+      btnPago.textContent = "Pago";
+    }
+
+    btnGratis.addEventListener("click", () => sortearCurso("gratis"));
+    btnPago.addEventListener("click", () => sortearCurso("pago"));
+
+    btnNovo.addEventListener("click", () => {
+      etapaResultado.classList.add("oculto");
+      etapaTipo.classList.remove("oculto");
+      cursoLink.classList.add("oculto");
+      cursoCategoria.classList.add("oculto");
+    });
+  </script>
+</body>
+</html>
